@@ -16,8 +16,9 @@ println("Krylov Norm:", norm(kdif))
 println()
 
 include("myownshit.jl")
-xs, = mybicgstab(A, b)
-x = view(xs, :, size(xs, 2))
+x, i, xs = mybicgstab(A, b)
+
+xs = view(xs, :, 1:i+1)
 
 println("My stuff")
 println("solution:")

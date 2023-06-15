@@ -43,14 +43,14 @@ function mybicgstab(A, b)
         beta = (rho[i] / rho[i-1]) * (alpha / omega[i-1])
         # println(beta)
         copyto!(c(p, i), c(r, i-1) + beta * (c(p, i-1) - omega[i-1] * c(v, i-1)))
-        copyto!(c(v, i), A*c(p, i))
+        copyto!(c(v, i), A*c(p, i-0))
         alpha = rho[i] / dot(r_hat, c(v, i))
         h = c(x, i-1) + alpha * c(p, i)
 
         # if h is accurate enough...
         if goodenough(h)
             copyto!(c(x, i), h)
-            return x
+            return h, i - 1, x, r, p, v, rho, omega
         end
 
         s = c(r, i-1) - alpha * c(v, i)
@@ -59,11 +59,11 @@ function mybicgstab(A, b)
         copyto!(c(x, i), h + omega[i] * s)
 
         if goodenough(c(x, i))
-            return x
+            return c(x, i), i - 1, x, r, p, v, rho, omega
         end
 
         copyto!(c(r, i), s - omega[i] * t)
     end
 
-    x, r, p, v, rho, omega
+    c(x, max_it + 1), max_it, x, r, p, v, rho, omega
 end
