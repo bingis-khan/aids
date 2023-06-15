@@ -1,4 +1,5 @@
 using LinearAlgebra
+using IncompleteLU
 
 
 function isaccenough(A, x, b)
@@ -11,6 +12,11 @@ function c(v, i)
 end
 
 function mybicgstab(A, b)
+    # preconditioning
+    precon = ilu(A) 
+    k1 = (precon.L + I)'
+    k2 = precon.U
+    
     # initialize all of this shiet
     # less for performance, more for debugging
     # remember each step
@@ -43,9 +49,10 @@ function mybicgstab(A, b)
         beta = (rho[i] / rho[i-1]) * (alpha / omega[i-1])
         # println(beta)
         copyto!(c(p, i), c(r, i-1) + beta * (c(p, i-1) - omega[i-1] * c(v, i-1)))
-        copyto!(c(v, i), A*c(p, i-0))
+        y = k2 * k1 * c(p, i)
+        copyto!(c(v, i), A*y)
         alpha = rho[i] / dot(r_hat, c(v, i))
-        h = c(x, i-1) + alpha * c(p, i)
+        h = c(x, i-1) + alpha * y
 
         # if h is accurate enough...
         if goodenough(h)
@@ -54,9 +61,10 @@ function mybicgstab(A, b)
         end
 
         s = c(r, i-1) - alpha * c(v, i)
-        t = A * s
-        omega[i] = dot(t, s) / dot(t, t)
-        copyto!(c(x, i), h + omega[i] * s)
+        z = k2 * k1 * s
+        t = A * z
+        omega[i] = dot(k1 * t, k1 * s) / dot(k1 * t, k1 * t)
+        copyto!(c(x, i), h + omega[i] * z)
 
         if goodenough(c(x, i))
             return c(x, i), i - 1, x, r, p, v, rho, omega

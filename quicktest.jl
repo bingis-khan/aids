@@ -6,8 +6,11 @@ A, b = fdmproblem(6)
 
 using Krylov
 using LinearAlgebra
+using IncompleteLU
 
-ksol, = bicgstab(A, b)
+
+LU = ilu(A)
+ksol, = bicgstab(A, b, M=LU, ldiv=true)
 
 kdif = b - A * ksol
 println("solution: ")
