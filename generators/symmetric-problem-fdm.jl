@@ -1,3 +1,5 @@
+using SparseArrays
+
 function fdmproblem(n)
     m = n
     A = zeros(n*m, n*m)
