@@ -11,12 +11,11 @@ function c(v, i)
     view(v, :, i)
 end
 
+
 function mybicgstab(A, b)
     # preconditioning
-    precon = ilu(A) 
-    k1 = (precon.L + I)'
-    k2 = precon.U
-    
+    Pl = ilu(A) 
+
     # initialize all of this shiet
     # less for performance, more for debugging
     # remember each step
@@ -49,7 +48,7 @@ function mybicgstab(A, b)
         beta = (rho[i] / rho[i-1]) * (alpha / omega[i-1])
         # println(beta)
         copyto!(c(p, i), c(r, i-1) + beta * (c(p, i-1) - omega[i-1] * c(v, i-1)))
-        y = k2 * k1 * c(p, i)
+        y = Pl \ c(p, i)
         copyto!(c(v, i), A*y)
         alpha = rho[i] / dot(r_hat, c(v, i))
         h = c(x, i-1) + alpha * y
@@ -61,9 +60,9 @@ function mybicgstab(A, b)
         end
 
         s = c(r, i-1) - alpha * c(v, i)
-        z = k2 * k1 * s
+        z = Pl \ s
         t = A * z
-        omega[i] = dot(k1 * t, k1 * s) / dot(k1 * t, k1 * t)
+        omega[i] = dot(t, z) / dot(t, t)
         copyto!(c(x, i), h + omega[i] * z)
 
         if goodenough(c(x, i))

@@ -2,7 +2,7 @@
 include("generators/symmetric-problem-fdm.jl")
 
 
-A, b = fdmproblem(6)
+A, b = fdmproblem(10)
 
 using Krylov
 using LinearAlgebra
