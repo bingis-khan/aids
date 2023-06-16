@@ -46,9 +46,9 @@ end
 # Pl = DiagonalPreconditioner(A)
 # Pl = incomplete_cholesky_preconditioner(A)
 # Pl = AMGPreconditioner{SmoothedAggregation}(A)
-Pl = aspreconditioner(ruge_stuben(A))
+# Pl = aspreconditioner(ruge_stuben(A))
 # Pl = I
-# Pl = ilu(A)
+Pl = ilu(A)
 # Pl = lldl(A)
 # Pl.D .=  abs.(Pl.D)
 ksol, stats = bicgstab(A, b, M=Pl, ldiv=true)
@@ -76,3 +76,19 @@ solch = map(x -> norm(b - A * x), eachcol(xs))
 # println("Solution change:", solch)
 println("with minimum:", minimum(solch))
 println("Iterations:", i)
+println()
+
+
+include("optimizedshit.jl")
+x, i, xs = newbicgstab(A, b, Pl)
+xs = view(xs, :, 1:i+1)
+
+println("Optimized stuff")
+dif = b - A * x
+println(norm(dif))
+
+solch = map(x -> norm(b - A * x), eachcol(xs))
+# println("Solution change:", solch)
+println("with minimum:", minimum(solch))
+println("Iterations:", i)
+println()

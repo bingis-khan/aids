@@ -1,10 +1,14 @@
 using BenchmarkTools
+using Krylov
 using IncompleteLU
 
 include("myownshit.jl")
 include("optimizedshit.jl")
 
 function single(A, b, Pl)
+    println("Reference")
+    @btime bicgstab(A, b, M=Pl, ldiv=true)
+
     println("Old testin'")
     @btime mybicgstab(A, b, Pl)
     
@@ -13,9 +17,9 @@ function single(A, b, Pl)
 end
 
 
-include("generators/symmetric-problem-fem.jl")
+include("generators/symmetric-problem-fdm.jl")
 
-A, b = femproblem(10)
+A, b = fdmproblem(20)
 Pl = ilu(A)
 
 
