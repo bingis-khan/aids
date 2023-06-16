@@ -62,7 +62,8 @@ function mybicgstab(A, b)
         s = c(r, i-1) - alpha * c(v, i)
         z = Pl \ s
         t = A * z
-        omega[i] = dot(t, z) / dot(t, t)
+        plt = Pl \ t
+        omega[i] = dot(plt, Pl \ s) / dot(plt, plt)
         copyto!(c(x, i), h + omega[i] * z)
 
         if goodenough(c(x, i))
