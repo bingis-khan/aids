@@ -1,4 +1,5 @@
 using LinearAlgebra
+using SparseArrays
 
 stiffness_element(lx, ly) =
 [lx/ly  1  lx/ly  1

@@ -11,7 +11,7 @@ function c(v, i)
 end
 
 
-function mybicgstab(A, b, Pl)
+function newbicgstab(A, b, Pl)
     # initialize all of this shiet
     # less for performance, more for debugging
     # remember each step
