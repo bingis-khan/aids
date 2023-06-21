@@ -1,8 +1,9 @@
 
+include("generators/nonsymmetric-problem-fvm.jl")
+include("generators/symmetric-problem-fdm.jl")
 include("generators/symmetric-problem-fem.jl")
 
-
-A, b = femproblem(20)
+A, b = fdmproblem(20)
 
 
 
@@ -80,15 +81,11 @@ println()
 
 
 include("optimizedshit.jl")
-x, i, xs = newbicgstab(A, b, Pl)
-xs = view(xs, :, 1:i+1)
+x, i = newbicgstab(A, b, Pl)
 
 println("Optimized stuff")
 dif = b - A * x
 println(norm(dif))
 
-solch = map(x -> norm(b - A * x), eachcol(xs))
-# println("Solution change:", solch)
-println("with minimum:", minimum(solch))
 println("Iterations:", i)
 println()

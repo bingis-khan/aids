@@ -19,59 +19,68 @@ function newbicgstab(A::SparseMatrixCSC{Float64, Int64}, b::Vector{Float64}, Pl)
     T = eltype(b)
     n, nump = size(A)
     max_it = 2 * n
-    x = zeros(T, nump, max_it+1)
-    r = Matrix{T}(undef, n, max_it+1)
-    copyto!(view(r, :, 1), b)
 
-    r_hat = c(r, 1)
+    x = zeros(T, nump)
+    px = zeros(T, nump)
+
+    r = Vector{T}(undef, n)
+    pr = Vector{T}(undef, n)
+    copyto!(r, b)
+    copyto!(pr, b)
+
+    r_hat = r
 
     @assert(r_hat == b)
 
     # scalars
-    rho = ones(max_it+1)
-    omega = copy(rho)
+    rho = prho = 1
+    omega = pomega = 1
     alpha::Float64 = 1
 
     # vectors 
-    v = zeros(T, nump, max_it + 1) 
-    p = copy(v)
+    v = zeros(nump)
+    pv = zeros(nump)
+    p = zeros(nump)
+    pp = zeros(nump)
 
     tol = sqrt(eps(T))
 
-    # statically allocate some memory
-    # only y has some speedup for some reason, the lower amount of allocations, but increase running time
-    y = Vector{T}(undef, nump)    
-
     @inbounds for i in 2:max_it + 1
-        rho[i] = dot(r_hat, c(r, i-1))
-        beta = (rho[i] / rho[i-1]) * (alpha / omega[i-1])
-        # println(beta)
-        copyto!(c(p, i), c(r, i-1) + beta * (c(p, i-1) - omega[i-1] * c(v, i-1)))
-        ldiv!(y, Pl, c(p, i))
-        copyto!(c(v, i), A*y)
-        alpha = rho[i] / dot(r_hat, c(v, i))
-        h = c(x, i-1) + alpha * y
+        rho = dot(r_hat, pr)
+        beta = (rho / prho) .* (alpha / pomega)
+        p = pr .+ beta .* (pp - pomega .* pv)
+        y = Pl \ p
+        v = A*y
+        alpha = rho / dot(r_hat, v)
+        h = px .+ alpha .* y
+
 
         # if h is accurate enough...
         if norm(b - A * h) <= tol
-            copyto!(c(x, i), h)
-            return c(x, i), i - 1, x
+            return h, i - 1
         end
 
-        s = c(r, i-1) - alpha * c(v, i)
+        s = pr - alpha .* v
         z = Pl \ s
         t = A * z
         plt = Pl \ t
         pls =  Pl \ s
-        omega[i] = dot(plt, pls) / dot(plt, plt)
-        copyto!(c(x, i), h + omega[i] * z)
+        omega = dot(plt, pls) / dot(plt, plt)
+        x = h + omega .* z
 
-        if norm(b - A * c(x, i)) <= tol
-            return c(x, i), i - 1, x
+        if norm(b - A * x) <= tol
+            return x, i - 1
         end
 
-        copyto!(c(r, i), s - omega[i] * t)
+        r = s - omega .* t
+
+        px = x
+        pr = r
+        pp = p
+        pv = v
+        prho = rho
+        pomega = omega
     end
 
-    c(x, max_it + 1), max_it, x
+    x, max_it
 end
